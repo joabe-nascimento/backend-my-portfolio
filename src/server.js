@@ -12,11 +12,8 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // MongoDB connection
-mongoose.connect(process.env.MONGO_URI, {
-  // useNewUrlParser e useUnifiedTopology são deprecatados e podem ser removidos.
-});
+mongoose.connect(process.env.MONGO_URI);
 
-// Verificar conexão
 mongoose.connection.on("connected", () => {
   console.log("Conexão do banco de dados bem sucedida.");
 });
