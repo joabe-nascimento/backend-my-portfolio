@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const compression = require("compression"); // Adicione a importação
 require("dotenv").config();
 
 const app = express();
@@ -10,6 +11,7 @@ const port = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use(compression()); // Use compressão
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI);
@@ -30,6 +32,8 @@ const feedbackSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+feedbackSchema.index({ createdAt: -1 }); // Adicione um índice
+
 const Feedback = mongoose.model("Feedback", feedbackSchema);
 
 // Rota para salvar feedback
@@ -44,10 +48,14 @@ app.post("/api/feedback", async (req, res) => {
   }
 });
 
-// Nova rota para buscar feedbacks
+// Rota para buscar feedbacks com paginação
 app.get("/api/feedback", async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Adicione paginação
   try {
-    const feedbacks = await Feedback.find().sort({ createdAt: -1 });
+    const feedbacks = await Feedback.find()
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
     res.status(200).json(feedbacks);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch feedbacks" });
